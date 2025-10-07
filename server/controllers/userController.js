@@ -1,8 +1,14 @@
-const { User, Cart } = require("../models/models");
+const { User, Cart } = require("../models/models"); // потребуется модель пользователя и корзины с заказом
 const ApiError = require("../error/APIError");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
+// создадим отдельную функцию для генерации JWT-токена
+function GenerateToken(id, name, email, role) {
+  return jwt.sign({ id, name, email, role }, process.env.SECRET_KEY, { expiresIn: "24h" }); // 1) payload 2) секретный ключ, в .env 3) опция, сколько будет жить токен
+}
 
 class UserController {
-
   async registration(req, res, next) {
     try {
       const { name, email, password_hash, role } = req.body;
@@ -19,7 +25,8 @@ class UserController {
 
       const user = await User.create({ name, email, password_hash, role });
       const cart = await Cart.create({ user_id: user.id });
-      
+      const token = GenerateToken(user.id, user.name, user.email, user.role);
+      return res.json({ token });
     } catch (error) {
       return next(ApiError.internal("Ошибка при регистрации"));
     }
@@ -32,7 +39,13 @@ class UserController {
       if (!user) {
         return next(ApiError.badRequest("Пользователь с данным email не найден"));
       }
-      
+      let comparePassword = bcrypt.compareSync(password_hash, user.password_hash);
+      if (!comparePassword) {
+        return next(ApiError.conflict("Неверный пароль!"));
+      }
+      const token = GenerateToken(user.id, user.name, user.email, user.role); // генерируем токен
+
+      return res.json({ token });
     } catch (error) {
       return next(ApiError.internal("Ошибка при входе в аккаунт"));
     }
@@ -48,7 +61,10 @@ class UserController {
   }
 
   async check_auth(req, res, next) {
-    
+    //return res.json({ message: "все гуд" });
+    const token = GenerateToken(req.user.id, req.user.name, req.user.email, req.user.role);
+    // return res.json({ message: "Пользователь авторизован" });
+    return res.json({ token });
   }
 
   async delete(req, res, next) {
@@ -61,10 +77,13 @@ class UserController {
         return next(ApiError.notFound("Пользователь не найден"));
       }
 
+      // Удаляем связанную корзину
       const cart = await Cart.findOne({ where: { user_id: userId } });
       if (cart) {
         await cart.destroy();
       }
+
+      // ?Удаление заказов? хотя не нужно по сути
 
       await user.destroy();
 
