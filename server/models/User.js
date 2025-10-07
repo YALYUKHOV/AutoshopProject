@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../config/db");
+const bcrypt = require("bcrypt");
 
 const User = sequelize.define("User", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -7,6 +8,11 @@ const User = sequelize.define("User", {
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
   password_hash: { type: DataTypes.STRING, allowNull: false },
   role: { type: DataTypes.ENUM("client", "admin"), allowNull: false, defaultValue: "client" },
+});
+
+// Хеширование пароля перед сохранением
+User.beforeCreate(async (user) => {
+  user.password_hash = await bcrypt.hash(user.password_hash, 5);
 });
 
 // Один пользователь может иметь много заказов
