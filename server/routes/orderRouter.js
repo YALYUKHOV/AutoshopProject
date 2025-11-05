@@ -1,15 +1,22 @@
 const Router = require("express");
 const router = new Router();
+const orderController = require("../controllers/orderController");
+const authMiddleware = require("../middleware/authMiddleware");
+const checkRole = require("../middleware/checkRoleMiddleware");
 
-router.post("/",);
+router.post("/", authMiddleware, orderController.create);
 
-router.get("/",);
+router.get("/", authMiddleware, orderController.getUserOrders);
 
-router.get("/:id",);
+// Получить конкретный заказ
+router.get("/:id", authMiddleware, orderController.getOne);
 
-router.get("/admin/all",);
+// // Админ может видеть все заказы
+router.get("/admin/all", checkRole("admin"), orderController.getAllOrders);
 
-router.put("/:order_id",);
+// // Обновить статус заказа ("admin")
+router.put("/:order_id", checkRole("admin"), orderController.updateStatus);
 
+//router.delete("/", checkRole("admin"), orderController.deleteAllOrders);
 
 module.exports = router;

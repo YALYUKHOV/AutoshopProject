@@ -5,7 +5,7 @@ const userRouter = require("./userRouter");
 const productRouter = require("./productRouter");
 const categoryRouter = require("./categoryRouter");
 const orderRouter = require("./orderRouter");
-
+const cartRouter = require("./cartRouter");
 const cartitem = require("./cartItemRouter");
 
 // сопоставляем маршруты к соответствующим роутерам
