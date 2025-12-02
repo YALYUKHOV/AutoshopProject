@@ -2,9 +2,13 @@ const { User, Cart } = require("../models/models"); // потребуется м
 const ApiError = require("../error/APIError");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+require('dotenv').config();
 
 // создадим отдельную функцию для генерации JWT-токена
 function GenerateToken(id, name, email, role) {
+  if (!process.env.SECRET_KEY) {
+     console.error("ОШИБКА: Нет SECRET_KEY в переменных окружения!");
+  }
   return jwt.sign({ id, name, email, role }, process.env.SECRET_KEY, { expiresIn: "24h" }); // 1) payload 2) секретный ключ, в .env 3) опция, сколько будет жить токен
 }
 
